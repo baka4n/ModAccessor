@@ -1,0 +1,39 @@
+plugins {
+    id 'java'
+    id 'java-gradle-plugin'
+    id 'groovy-gradle-plugin'
+    id 'com.gradleup.shadow' version '8.3.6'
+}
+
+group = 'dev.vfyjxf.gradle'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+    gradlePluginPortal()
+    maven { url = 'https://maven.neoforged.net/releases' }
+}
+
+dependencies {
+    compileOnly gradleApi()
+    implementation "org.apache.commons:commons-lang3:3.8.1"
+    implementation "net.neoforged.jst:jst-cli-bundle:1.0.72"
+    implementation "net.neoforged:accesstransformers:11.0.2"
+    compileOnly("net.neoforged.moddev:net.neoforged.moddev.gradle.plugin:2.0.86")
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+gradlePlugin {
+    plugins {
+        mod_accessor {
+            id = 'dev.vfyjxf.modaccessor'
+            implementationClass = 'dev.vfyjxf.gradle.accessor.ModAccessorPlugin'
+        }
+    }
+}
