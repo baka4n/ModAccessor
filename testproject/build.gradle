@@ -113,14 +113,15 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 // "optional", meaning it will not be pulled by dependents of this mod.
 configurations {
     runtimeClasspath.extendsFrom localRuntime
+    implementation.extendsFrom modImplementation
 }
 modAccessor {
-    createTransformConfiguration(configurations.implementation)
+    createTransformConfiguration(configurations.modImplementation)
     accessTransformerFiles = project.files('src/main/resources/META-INF/accesstransformer.cfg')
 }
 
 dependencies {
-    accessImplementation(("com.simibubi.create:create-${minecraft_version}:6.0.4-61:slim"))
+    accessModImplementation("com.simibubi.create:create-${minecraft_version}:6.0.4-61:slim") { transitive = false }
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
