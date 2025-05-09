@@ -1,11 +1,18 @@
 package dev.vfyjxf.gradle.accessor;
 
+import dev.vfyjxf.gradle.accessor.dependency.ModDependencyHandler;
+import net.neoforged.jst.accesstransformers.AccessTransformersTransformer;
+import net.neoforged.jst.api.SourceTransformer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.type.ArtifactTypeDefinition;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
 public class ModAccessorPlugin implements Plugin<Project> {
+
     @Override
     public void apply(@NotNull Project project) {
         var extension = project.getExtensions().create(
@@ -13,25 +20,26 @@ public class ModAccessorPlugin implements Plugin<Project> {
                 ModAccessTransformExtension.class,
                 project
         );
-        project.getDependencies().getArtifactTypes().named(ArtifactTypeDefinition.JAR_TYPE, type -> {
-            type.getAttributes().attribute(ModAccessTransformExtension.TRANSFORM_ACCESS, false);
+        var configuration = project.getConfigurations().create("transformAccess", config -> {
+            config.setDescription("Transform mod dependency access");
+            config.setCanBeResolved(true);
+            config.setCanBeConsumed(true);
+            config.setTransitive(false);
         });
-        project.getDependencies().registerTransform(
-                AccessTransform.class,
-                parameters -> {
-                    parameters.parameters(p -> {
-                        p.getAccessTransformerFiles().from(extension.getAccessTransformerFiles());
-                    });
-                    parameters.getFrom().attribute(
-                            ModAccessTransformExtension.TRANSFORM_ACCESS,
-                            false
-                    ).attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, ArtifactTypeDefinition.JAR_TYPE);
-                    parameters.getTo().attribute(
-                            ModAccessTransformExtension.TRANSFORM_ACCESS,
-                            true
-                    ).attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, ArtifactTypeDefinition.JAR_TYPE);
-                }
-        );
+        project.afterEvaluate(p -> {
+            if (p.getState().getFailure() == null) {
+                List<SourceTransformer> sourceTransformers = new ArrayList<>();
+                var accessTransformer = new AccessTransformersTransformer();
+                accessTransformer.atFiles = extension.getAccessTransformerFiles()
+                                                    .getFiles()
+                                                    .stream()
+                                                    .map(File::toPath)
+                                                    .toList();
+                sourceTransformers.add(accessTransformer);
+                ModTransformer transformer = new ModTransformer(extension.getAccessTransformerFiles(), sourceTransformers);
+                ModDependencyHandler.run(transformer, project, extension.transformToSourceConfigurations());
+            }
+        });
     }
 
 
