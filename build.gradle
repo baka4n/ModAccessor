@@ -3,10 +3,11 @@ plugins {
     id 'java-gradle-plugin'
     id 'groovy-gradle-plugin'
     id 'com.gradleup.shadow' version '8.3.6'
+    id "com.gradle.plugin-publish" version "1.3.1"
 }
 
 group = 'dev.vfyjxf.gradle'
-version = '1.0-SNAPSHOT'
+version = '1.0'
 
 repositories {
     mavenCentral()
@@ -15,12 +16,16 @@ repositories {
     maven { url = 'https://maven.neoforged.net/releases' }
 }
 
+configurations {
+    shade
+    implementation.extendsFrom(shade)
+}
+
 dependencies {
     compileOnly gradleApi()
     implementation "org.apache.commons:commons-lang3:3.8.1"
     implementation "net.neoforged.jst:jst-cli-bundle:1.0.72"
     implementation "net.neoforged:accesstransformers:11.0.2"
-    compileOnly("net.neoforged.moddev:net.neoforged.moddev.gradle.plugin:2.0.86")
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
 }
@@ -28,11 +33,22 @@ dependencies {
 test {
     useJUnitPlatform()
 }
+shadowJar{
+    archiveClassifier.set('')
+    configurations = [project.configurations.shade]
+    relocate 'net.neoforged.jst', 'dev.vfyjxf.gradle.accessor.relocate.jst'
+    relocate 'net.neoforged.accesstransformers', 'dev.vfyjxf.gradle.accessor.relocate.accesstransformers'
+}
 
 gradlePlugin {
+    website = 'https://github.com/vfyjxf/ModAccessor'
+    vcsUrl = 'https://github.com/vfyjxf/ModAccessor'
     plugins {
         mod_accessor {
+            displayName = 'ModAccessor'
+            description = "A simple gradle plugin to solve the problem of accessing private fields and methods during compile time."
             id = 'dev.vfyjxf.modaccessor'
+            tags.addAll('neoforge','minecraft','java')
             implementationClass = 'dev.vfyjxf.gradle.accessor.ModAccessorPlugin'
         }
     }

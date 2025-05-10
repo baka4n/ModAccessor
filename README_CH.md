@@ -17,6 +17,6 @@ dependencies {
 
 ## Credit
 
-[fabric loom](https://github.com/FabricMC/fabric-loom) : 提供了最初版本的解决思路，帮我搞清楚了Artifact Transform如何工作
+[fabric loom](https://github.com/FabricMC/fabric-loom) : 提供了LocalMaven的解决方案，并且源码转换基于loom的设计
 
-[moddev gradle](https://github.com/NeoForged/ModDevGradle) : 提供了LocalMaven的解决方案，并且源码转换基于loom的设计
+[moddev gradle](https://github.com/NeoForged/ModDevGradle) : 提供了最初版本的解决思路，帮我搞清楚了Artifact Transform如何工作

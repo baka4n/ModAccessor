@@ -116,12 +116,12 @@ configurations {
     implementation.extendsFrom modImplementation
 }
 modAccessor {
-    createTransformConfiguration(configurations.modImplementation)
+    createTransformConfiguration(configurations.compileOnly)
     accessTransformerFiles = project.files('src/main/resources/META-INF/accesstransformer.cfg')
 }
 
 dependencies {
-    accessModImplementation("com.simibubi.create:create-${minecraft_version}:6.0.4-61:slim") { transitive = false }
+    accessCompileOnly("com.simibubi.create:create-${minecraft_version}:6.0.4-61:slim") { transitive = false }
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
