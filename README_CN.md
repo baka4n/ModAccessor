@@ -5,7 +5,7 @@
 
 ## Usage
 
-[![ModAccessor](https://img.shields.io/maven-metadata/v/https/plugins.gradle.org/m2/dev/vfyjxf/modaccessor/dev.vfyjxf.modaccessor.gradle.plugin/maven-metadata.xml.svg?label=Gradle%20Plugin%20Portal)](https://plugins.gradle.org/plugin/dev.vfyjxf.modaccessor)
+[![ModAccessor](https://img.shields.io/maven-metadata/v/https/plugins.gradle.org/m2/dev/vfyjxf/modaccessor/dev.vfyjxf.modaccessor.gradle.plugin/maven-metadata.xml.svg?label=ModAccessor)](https://plugins.gradle.org/plugin/dev.vfyjxf.modaccessor)
 
 ```groovy
 
