@@ -1,7 +1,10 @@
 # ModAccessor
 
 一个简单的Gradle Plugin,用于解决编译期无法访问私有类型/字段/方法的问题。
+
 **注意:你需要自己处理运行时的access transform**
+
+**通常来说，你可以直接向forge/neoforge提供AT文件,它会自动应用到mod类上**
 
 ## Usage
 
@@ -10,7 +13,7 @@
 ```groovy
 
 plugins{
-    id("dev.vfyjxf.modaccessor") version "1.0"
+    id("dev.vfyjxf.modaccessor") version "1.1"
 }
 modAccessor {
     createTransformConfiguration(configurations.compileOnly)

@@ -7,7 +7,7 @@ plugins {
 }
 
 group = 'dev.vfyjxf.gradle'
-version = '1.0'
+version = '1.1'
 
 repositories {
     mavenCentral()
@@ -23,9 +23,12 @@ configurations {
 
 dependencies {
     compileOnly gradleApi()
-    implementation "org.apache.commons:commons-lang3:3.8.1"
-    implementation "net.neoforged.jst:jst-cli-bundle:1.0.72"
-    implementation "net.neoforged:accesstransformers:11.0.2"
+    shade "org.apache.commons:commons-lang3:3.8.1"
+    shade "net.neoforged.jst:jst-cli-bundle:1.0.72"
+    shade("net.neoforged:accesstransformers:11.0.2") {
+        exclude group: 'org.slf4j', module: 'slf4j-api'
+    }
+    compileOnly('org.slf4j:slf4j-api:2.0.9')
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
 }
@@ -33,11 +36,13 @@ dependencies {
 test {
     useJUnitPlatform()
 }
-shadowJar{
+shadowJar {
     archiveClassifier.set('')
     configurations = [project.configurations.shade]
     relocate 'net.neoforged.jst', 'dev.vfyjxf.gradle.accessor.relocate.jst'
     relocate 'net.neoforged.accesstransformers', 'dev.vfyjxf.gradle.accessor.relocate.accesstransformers'
+    relocate 'org.objectweb.asm', 'dev.vfyjxf.gradle.accessor.relocate.asm'
+    relocate 'org.apache.commons.lang3', 'dev.vfyjxf.gradle.accessor.relocate.commons.lang3'
 }
 
 gradlePlugin {
@@ -48,8 +53,23 @@ gradlePlugin {
             displayName = 'ModAccessor'
             description = "A simple gradle plugin to solve the problem of accessing private fields and methods during compile time."
             id = 'dev.vfyjxf.modaccessor'
-            tags.addAll('neoforge','minecraft','java')
+            tags.addAll('neoforge', 'minecraft', 'java')
             implementationClass = 'dev.vfyjxf.gradle.accessor.ModAccessorPlugin'
+        }
+    }
+}
+
+publishing {
+    repositories {
+        mavenLocal()
+    }
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifact shadowJar
+            groupId = project.group
+            artifactId = project.name
+            version = project.version
         }
     }
 }

@@ -4,6 +4,8 @@ A simple gradle plugin to solve the problem of accessing private fields and meth
 
 **You should transform the classes in runtime by yourself.**
 
+**Normally,if you pass AT files to forge/neoforge, it will apply to mod class automatically**
+
 
 ## Usage
 
@@ -12,7 +14,7 @@ A simple gradle plugin to solve the problem of accessing private fields and meth
 ```groovy
 
 plugins{
-    id("dev.vfyjxf.modaccessor") version "1.0"
+    id("dev.vfyjxf.modaccessor") version "1.1"
 }
 
 modAccessor {

@@ -62,9 +62,6 @@ public abstract class AccessTransform implements TransformAction<AccessTransform
         List<Path> atFiles = stream(parameters.getAccessTransformerFiles().spliterator(), false)
                                      .map(File::toPath)
                                      .toList();
-        if (atFiles.isEmpty()) {
-            throw new IllegalStateException("No access transformer files provided!");
-        }
         var engine = AccessTransformerEngine.newEngine();
         for (Path atFile : atFiles) {
             try {
