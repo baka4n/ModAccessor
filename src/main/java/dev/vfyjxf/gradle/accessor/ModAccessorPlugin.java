@@ -24,10 +24,7 @@ public class ModAccessorPlugin implements Plugin<Project> {
                 AccessTransform.class,
                 parameters -> {
                     parameters.parameters(p -> {
-                        var atFiles = extension.getAccessTransformerFiles();
-                        if (atFiles.isEmpty() || atFiles.getFiles().stream().anyMatch(File::exists)) {
-                            project.getLogger().error("No access transformer files found. Please add some.");
-                        }
+
                         p.getAccessTransformerFiles().from(extension.getAccessTransformerFiles());
                     });
                     parameters.getFrom().attribute(
@@ -40,6 +37,12 @@ public class ModAccessorPlugin implements Plugin<Project> {
                     ).attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, ArtifactTypeDefinition.JAR_TYPE);
                 }
         );
+        project.afterEvaluate(p->{
+            var atFiles = extension.getAccessTransformerFiles();
+            if (atFiles.isEmpty() || atFiles.getFiles().stream().noneMatch(File::exists)) {
+                p.getLogger().error("No access transformer files found. Please add some.");
+            }
+        });
     }
 
 
