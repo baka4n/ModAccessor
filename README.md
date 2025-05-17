@@ -27,6 +27,8 @@ dependencies {
 }
 ```
 
+The accessConfiguration isn't transitive, so you need to add the dependencies manually.
+
 
 ## Credit
 
