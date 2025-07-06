@@ -1,0 +1,42 @@
+plugins {
+    id("com.gtnewhorizons.retrofuturagradle") version("1.4.6")
+    id("maven-publish")
+    id "dev.vfyjxf.modaccessor"
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+modAccessor {
+    accessTransformerFiles = project.files("test_at.cfg")
+    createTransformConfiguration(configurations.compileOnly)
+    interfaceInjectionFiles = project.files('injections.json')
+}
+
+dependencies {
+    accessCompileOnly rfg.deobf("mezz.jei:jei_1.12.2:4.16.1.1013")
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(8))
+        vendor.set(JvmVendorSpec.AZUL)
+    }
+    withSourcesJar()
+    withJavadocJar()
+}
+
+group = "testmod"
+version = "1.0"
+
+minecraft {
+    // skipSlowTasks.set(true)
+    mcVersion.set("1.12.2")
+    injectedTags.put("TAG_VERSION", version)
+}
+
+tasks.injectTags.configure {
+    outputClassName.set("testmod.Tags")
+}

@@ -7,7 +7,7 @@ plugins {
 }
 
 group = 'dev.vfyjxf.gradle'
-version = '1.1.1'
+version = '1.1.2'
 
 repositories {
     mavenCentral()
@@ -24,7 +24,9 @@ configurations {
 dependencies {
     compileOnly gradleApi()
     shade "org.apache.commons:commons-lang3:3.8.1"
-    shade "net.neoforged.jst:jst-cli-bundle:1.0.72"
+    shade "com.google.code.gson:gson:2.10"
+    shade "org.ow2.asm:asm-util:9.7"
+//    shade "net.neoforged.jst:jst-cli-bundle:1.0.72"
     shade("net.neoforged:accesstransformers:11.0.2") {
         exclude group: 'org.slf4j', module: 'slf4j-api'
     }

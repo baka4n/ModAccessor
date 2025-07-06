@@ -12,12 +12,12 @@ public class ModAccessorPlugin implements Plugin<Project> {
     public void apply(@NotNull Project project) {
         var extension = project.getExtensions().create(
                 "modAccessor",
-                ModAccessTransformExtension.class,
+                ModAccessorExtension.class,
                 project
         );
         project.getDependencies().getArtifactTypes().named(
                 ArtifactTypeDefinition.JAR_TYPE, type -> {
-                    type.getAttributes().attribute(ModAccessTransformExtension.TRANSFORM_ACCESS, false);
+                    type.getAttributes().attribute(ModAccessorExtension.TRANSFORM_ACCESS, false);
                 }
         );
         project.getDependencies().registerTransform(
@@ -28,19 +28,50 @@ public class ModAccessorPlugin implements Plugin<Project> {
                         p.getAccessTransformerFiles().from(extension.getAccessTransformerFiles());
                     });
                     parameters.getFrom().attribute(
-                            ModAccessTransformExtension.TRANSFORM_ACCESS,
+                            ModAccessorExtension.TRANSFORM_ACCESS,
+                            false
+                    ).attribute(
+                            ModAccessorExtension.TRANSFORM_INTERFACE_INJECT,
+                            false
+                    ).attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, ArtifactTypeDefinition.JAR_TYPE);
+
+                    parameters.getTo().attribute(
+                            ModAccessorExtension.TRANSFORM_ACCESS,
+                            true
+                    ).attribute(
+                            ModAccessorExtension.TRANSFORM_INTERFACE_INJECT,
+                            false
+                    ).attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, ArtifactTypeDefinition.JAR_TYPE);
+                }
+        );
+
+        project.getDependencies().registerTransform(
+                InterfaceInjectionTransform.class,
+                parameters -> {
+                    parameters.parameters(p -> {
+                        p.getInterfaceInjectionFiles().from(extension.getInterfaceInjectionFiles());
+                    });
+
+                    parameters.getFrom().attribute(
+                            ModAccessorExtension.TRANSFORM_ACCESS,
+                            true
+                    ).attribute(
+                            ModAccessorExtension.TRANSFORM_INTERFACE_INJECT,
                             false
                     ).attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, ArtifactTypeDefinition.JAR_TYPE);
                     parameters.getTo().attribute(
-                            ModAccessTransformExtension.TRANSFORM_ACCESS,
+                            ModAccessorExtension.TRANSFORM_ACCESS,
+                            true
+                    ).attribute(
+                            ModAccessorExtension.TRANSFORM_INTERFACE_INJECT,
                             true
                     ).attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, ArtifactTypeDefinition.JAR_TYPE);
                 }
         );
-        project.afterEvaluate(p->{
+        project.afterEvaluate(p -> {
             var atFiles = extension.getAccessTransformerFiles();
             if (atFiles.isEmpty() || atFiles.getFiles().stream().noneMatch(File::exists)) {
-                p.getLogger().error("No access transformer files found. Please add some.");
+                p.getLogger().error("[ModAccessor]: No access transformer files found. Please add some.");
             }
         });
     }

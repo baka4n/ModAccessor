@@ -8,3 +8,5 @@ pluginManagement {
 
 rootProject.name = 'ModAccessor'
 
+
+includeBuild("testproject")

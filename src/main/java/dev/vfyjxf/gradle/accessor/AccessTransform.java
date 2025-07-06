@@ -78,9 +78,7 @@ public abstract class AccessTransform implements TransformAction<AccessTransform
                         if (entry.getName().endsWith(".class")) {
                             ClassReader reader = new ClassReader(entryStream);
                             ClassNode classNode = new ClassNode(Opcodes.ASM9);
-                            reader.accept(
-                                    classNode, 0
-                            );
+                            reader.accept(classNode, 0);
                             final Type type = Type.getType('L' + classNode.name.replaceAll("\\.", "/") + ';');
                             engine.transform(classNode, type);
                             ClassWriter classWriter = new ClassWriter(Opcodes.ASM5);

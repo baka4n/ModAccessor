@@ -1,0 +1,6 @@
+{
+  "mezz/jei/common/JeiFeatures": [
+    "test/injection/InterfaceInjected",
+    "java/util/function/Supplier<test.injection.Stack>"
+  ]
+}
