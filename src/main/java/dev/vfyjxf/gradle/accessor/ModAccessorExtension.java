@@ -8,6 +8,7 @@ import org.gradle.api.artifacts.FileCollectionDependency;
 import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.RegularFileProperty;
 
 import javax.inject.Inject;
 
@@ -21,6 +22,8 @@ public abstract class ModAccessorExtension {
     public abstract ConfigurableFileCollection getInterfaceInjectionFiles();
 
     public abstract ConfigurableFileCollection getAccessTransformerFiles();
+
+    public abstract RegularFileProperty getAccessTransformerFileMergeTo();
 
     @Inject
     public ModAccessorExtension(Project project) {
