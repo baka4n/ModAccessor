@@ -10,5 +10,6 @@ public class Stack {
         a.helloWorld();
         Stack stack = a.get();
         Textures textures = Internal.textures;
+
     }
 }

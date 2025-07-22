@@ -68,11 +68,22 @@ public class ModAccessorPlugin implements Plugin<Project> {
                     ).attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, ArtifactTypeDefinition.JAR_TYPE);
                 }
         );
+
         project.afterEvaluate(p -> {
             var atFiles = extension.getAccessTransformerFiles();
-            if (atFiles.isEmpty() || atFiles.getFiles().stream().noneMatch(File::exists)) {
+            var interfaceFiles = extension.getInterfaceInjectionFiles();
+            if (
+                    atFiles.isEmpty() || atFiles.getFiles().stream().noneMatch(File::exists)
+
+            ) {
                 p.getLogger().error("[ModAccessor]: No access transformer files found. Please add some.");
             }
+            if (
+                    interfaceFiles.isEmpty() || interfaceFiles.getFiles().stream().noneMatch(File::exists)
+            ) {
+                p.getLogger().error("[ModAccessor]: No interface injection files found. Please add some.");
+            }
+
         });
     }
 
