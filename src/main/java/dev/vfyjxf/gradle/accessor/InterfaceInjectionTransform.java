@@ -176,14 +176,13 @@ public abstract class InterfaceInjectionTransform implements TransformAction<Int
 
                     processedGenerics.append(component);
 
-                    if (i < genericComponents.length - 1) {
-                        //processedGenerics.append(",");
-                    }
+//                    if (i < genericComponents.length - 1) {
+//                        //processedGenerics.append(",");
+//                    }
                 }
 
                 processedGenerics.append(">");
                 generics = processedGenerics.toString();
-                System.out.println("baka4n: "+generics);
                 // First Generics Check, if there are generics, are they correctly written?
                 SignatureReader reader = new SignatureReader("Ljava/lang/Object" + generics + ";");
                 // Assuming CheckSignatureAdapter is a class that can handle the signature and reader is defined somewhere above
@@ -289,7 +288,7 @@ public abstract class InterfaceInjectionTransform implements TransformAction<Int
 
                 signature = resultingSignature.toString();
             }
-            System.out.println(signature);
+
             super.visit(version, access, name, signature, superName, modifiedInterfaces.toArray(new String[0]));
         }
 
