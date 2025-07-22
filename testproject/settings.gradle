@@ -20,4 +20,5 @@ plugins {
 }
 
 includeBuild '..'
-include("forge", "neoforge", "retroforge")
+include("forge", "neoforge")
+//include("retroforge")

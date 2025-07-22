@@ -27,6 +27,7 @@ import org.objectweb.asm.util.CheckSignatureAdapter;
 import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -161,7 +162,6 @@ public abstract class InterfaceInjectionTransform implements TransformAction<Int
                 // Split the generics into individual components
                 String[] genericComponents = rawGenerics.split(",");
                 StringBuilder processedGenerics = new StringBuilder("<");
-
                 for (int i = 0; i < genericComponents.length; i++) {
                     String component = genericComponents[i].trim();
 
@@ -177,13 +177,13 @@ public abstract class InterfaceInjectionTransform implements TransformAction<Int
                     processedGenerics.append(component);
 
                     if (i < genericComponents.length - 1) {
-                        processedGenerics.append(",");
+                        //processedGenerics.append(",");
                     }
                 }
 
                 processedGenerics.append(">");
                 generics = processedGenerics.toString();
-
+                System.out.println("baka4n: "+generics);
                 // First Generics Check, if there are generics, are they correctly written?
                 SignatureReader reader = new SignatureReader("Ljava/lang/Object" + generics + ";");
                 // Assuming CheckSignatureAdapter is a class that can handle the signature and reader is defined somewhere above
@@ -194,6 +194,7 @@ public abstract class InterfaceInjectionTransform implements TransformAction<Int
         }
 
         private static String processNestedGenerics(String component) {
+
             int start = component.indexOf('<');
             int end = component.lastIndexOf('>');
             String outerType = component.substring(0, start);
@@ -288,7 +289,7 @@ public abstract class InterfaceInjectionTransform implements TransformAction<Int
 
                 signature = resultingSignature.toString();
             }
-
+            System.out.println(signature);
             super.visit(version, access, name, signature, superName, modifiedInterfaces.toArray(new String[0]));
         }
 
