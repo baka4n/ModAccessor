@@ -5,5 +5,8 @@
   ],
   "mezz/jei/common/codecs/TupleCodec": [
     "test/injection/InterfaceInjected2<F, S>"
+  ],
+  "test/injection/api/TestB": [
+    "test/injection/InterfaceInjectedWithSelf<E, F, test/injection/api/TestB<E, F>>"
   ]
 }

@@ -109,7 +109,9 @@ public abstract class InterfaceInjectionTransform implements TransformAction<Int
 
                                 List<String> toInject = injections.get(classType);
                                 ClassWriter classWriter = new ClassWriter(Opcodes.ASM9);
+
                                 if (toInject != null) {
+
                                     List<InterfaceInjection> toApply = toInject.stream()
                                             .map(toImpl -> InterfaceInjection.of(classType, toImpl))
                                             .toList();
@@ -151,6 +153,7 @@ public abstract class InterfaceInjectionTransform implements TransformAction<Int
         public static InterfaceInjection of(String target, String toImpl) {
             String type = toImpl;
             String generics = null;
+
             if (toImpl.contains("<") && toImpl.contains(">")) {
                 int start = toImpl.indexOf('<');
                 int end = toImpl.lastIndexOf('>');
@@ -158,13 +161,12 @@ public abstract class InterfaceInjectionTransform implements TransformAction<Int
 
                 // Extract the generics part and replace '.' with '/'
                 String rawGenerics = toImpl.substring(start + 1, end).replace('.', '/');
-
                 // Split the generics into individual components
-                String[] genericComponents = rawGenerics.split(",");
+                String[] genericComponents = rawGenerics.split(",\\s*(?![^<>]*>)");
                 StringBuilder processedGenerics = new StringBuilder("<");
+
                 for (int i = 0; i < genericComponents.length; i++) {
                     String component = genericComponents[i].trim();
-
                     // Handle nested generics
                     if (component.contains("<")) {
                         // Recursively process nested generics
@@ -198,9 +200,8 @@ public abstract class InterfaceInjectionTransform implements TransformAction<Int
             int end = component.lastIndexOf('>');
             String outerType = component.substring(0, start);
             String innerRawGenerics = component.substring(start + 1, end).replace('.', '/');
-
             // Split the inner generics into individual components
-            String[] innerGenericComponents = innerRawGenerics.split(",");
+            String[] innerGenericComponents = innerRawGenerics.split(",\\s*(?![^<>]*>)");
             StringBuilder innerProcessedGenerics = new StringBuilder("<");
 
             for (int i = 0; i < innerGenericComponents.length; i++) {
@@ -216,13 +217,13 @@ public abstract class InterfaceInjectionTransform implements TransformAction<Int
 
                 innerProcessedGenerics.append(innerComponent);
 
-                if (i < innerGenericComponents.length - 1) {
-                    innerProcessedGenerics.append(",");
-                }
+//                if (i < innerGenericComponents.length - 1) {
+//                    innerProcessedGenerics.append(",");
+//                }
             }
 
             innerProcessedGenerics.append(">");
-            return "L" + outerType + innerProcessedGenerics.toString();
+            return "L" + outerType + innerProcessedGenerics.toString() + ";";
         }
 
 
