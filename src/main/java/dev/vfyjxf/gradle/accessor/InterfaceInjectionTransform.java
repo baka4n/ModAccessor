@@ -164,7 +164,6 @@ public abstract class InterfaceInjectionTransform implements TransformAction<Int
                 // Split the generics into individual components
                 String[] genericComponents = rawGenerics.split(",\\s*(?![^<>]*>)");
                 StringBuilder processedGenerics = new StringBuilder("<");
-
                 for (int i = 0; i < genericComponents.length; i++) {
                     String component = genericComponents[i].trim();
                     // Handle nested generics
