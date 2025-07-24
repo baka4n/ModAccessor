@@ -20,5 +20,8 @@ plugins {
 }
 
 includeBuild '..'
+
+includeBuild("testapi")
+
 include("forge", "neoforge")
 //include("retroforge")
