@@ -67,10 +67,10 @@ public abstract class InterfaceInjectionTransform implements TransformAction<Int
             File artifact = getInputArtifact().get().getAsFile();
             if (!artifact.exists()) return;
             Parameters parameters = getParameters();
-            List<Path> injectionFilePaths = stream(parameters.getInterfaceInjectionFiles().spliterator(), false)
-                    .map(File::toPath)
-                    .toList();
-            Map<String, List<String>> injections = injectionFilePaths.stream()
+
+            Map<String, List<String>> injections =
+                    stream(parameters.getInterfaceInjectionFiles().spliterator(), false)
+                            .map(File::toPath)
                     .flatMap(path -> {
                         try {
                             JsonObject jsonObject = JsonParser.parseReader(Files.newBufferedReader(path)).getAsJsonObject();
@@ -92,13 +92,12 @@ public abstract class InterfaceInjectionTransform implements TransformAction<Int
                                 }
                                 return Collections.emptyList();
                             },
-                            (list1, list2) -> {
-                                return new ArrayList<String>(list2);
-                            }
+                            (list1, list2) -> new ArrayList<>(list2)
                     ));
 
             File outputFile = outputs.file("injected-"+artifact.getName());
             if (injections.isEmpty()) {
+
                 try {
                     Files.copy(artifact.toPath(), outputFile.toPath());
                 } catch (IOException e) {throw new RuntimeException(e);}
