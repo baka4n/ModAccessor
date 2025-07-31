@@ -94,6 +94,7 @@ public abstract class InterfaceInjectionTransform implements TransformAction<Int
                                     (list1, list2) -> new ArrayList<>(list2)
                             ));
 
+
             File outputFile = outputs.file("injected-"+artifact.getName());
             if (injections.isEmpty()) {
 
@@ -108,7 +109,7 @@ public abstract class InterfaceInjectionTransform implements TransformAction<Int
                         try (var entryStream = inputJar.getInputStream(entry)) {
                             if (entry.getName().endsWith(".class")) {
                                 ClassReader reader = new ClassReader(entryStream);
-
+                              
                                 String classType = entry.getName()
                                         .replace(".class", "");
                                 List<String> toInject = injections.get(classType);
@@ -153,6 +154,7 @@ public abstract class InterfaceInjectionTransform implements TransformAction<Int
     //Code From:https://github.com/FabricMC/fabric-loom/blob/7c53939918cf63cdf4f176847088fd747c61e993/src/main/java/net/fabricmc/loom/configuration/ifaceinject/InterfaceInjectionProcessor.java
     private record InterfaceInjection(String target, String toImpl, @Nullable String generics) {
         public static InterfaceInjection of(String target, String toImpl) {
+
             String type = toImpl;
             String generics = null;
 
@@ -196,10 +198,16 @@ public abstract class InterfaceInjectionTransform implements TransformAction<Int
         }
 
         private static String processNestedGenerics(String component) {
-
             int start = component.indexOf('<');
+            if (start == -1) {
+                return "L" + component + ";";
+            }
             int end = component.lastIndexOf('>');
+            if (end == -1 || end <= start) {
+                return "L" + component + ";";
+            }
             String outerType = component.substring(0, start);
+            System.out.println(outerType);
             String innerRawGenerics = component.substring(start + 1, end).replace('.', '/');
             // Split the inner generics into individual components
             String[] innerGenericComponents = innerRawGenerics.split(",\\s*(?![^<>]*>)");
