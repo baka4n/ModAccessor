@@ -34,6 +34,7 @@ import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
+import java.util.stream.Collectors;
 
 import static java.util.stream.StreamSupport.stream;
 
@@ -65,34 +66,37 @@ public abstract class InterfaceInjectionTransform implements TransformAction<Int
             File artifact = getInputArtifact().get().getAsFile();
             if (!artifact.exists()) return;
             Parameters parameters = getParameters();
-            List<Path> injectionFilePaths = stream(parameters.getInterfaceInjectionFiles().spliterator(), false)
-                    .map(File::toPath)
-                    .toList();
-            Map<String, List<String>> injections = new HashMap<>();
-            for (Path injectionFilePath : injectionFilePaths) {
-                try {
-                    JsonObject jsonObject = JsonParser.parseReader(Files.newBufferedReader(injectionFilePath)).getAsJsonObject();
-                    for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
-                        List<String> list = new ArrayList<>();
-                        if (entry.getValue().isJsonArray()) {
-                            JsonArray array = entry.getValue().getAsJsonArray();
-                            for (JsonElement element : array) {
-                                list.add(element.getAsString());
-                            }
-                        }
-                        if (entry.getValue().isJsonPrimitive()) {
-                            list.add(entry.getValue().getAsString());
-                        }
-                        injections.put(entry.getKey(), list);
-                    }
-                } catch (IOException e) {
-                    throw new RuntimeException("Failed to parse injection file: " + injectionFilePath, e);
-                }
 
-            }
+            Map<String, List<String>> injections =
+                    stream(parameters.getInterfaceInjectionFiles().spliterator(), false)
+                            .map(File::toPath)
+                            .flatMap(path -> {
+                                try {
+                                    JsonObject jsonObject = JsonParser.parseReader(Files.newBufferedReader(path)).getAsJsonObject();
+                                    return jsonObject.entrySet().stream();
+                                } catch (IOException e) {
+                                    throw new RuntimeException("Failed to parse injection file: " + path, e);
+                                }
+                            })
+                            .collect(Collectors.toMap(
+                                    Map.Entry::getKey,
+                                    entry -> {
+                                        JsonElement value = entry.getValue();
+                                        if (value.isJsonArray()) {
+                                            return stream(value.getAsJsonArray().spliterator(), false)
+                                                    .map(JsonElement::getAsString)
+                                                    .collect(Collectors.toList());
+                                        } else if (value.isJsonPrimitive()) {
+                                            return Collections.singletonList(value.getAsString());
+                                        }
+                                        return Collections.emptyList();
+                                    },
+                                    (list1, list2) -> new ArrayList<>(list2)
+                            ));
 
             File outputFile = outputs.file("injected-"+artifact.getName());
             if (injections.isEmpty()) {
+
                 try {
                     Files.copy(artifact.toPath(), outputFile.toPath());
                 } catch (IOException e) {throw new RuntimeException(e);}
@@ -104,12 +108,11 @@ public abstract class InterfaceInjectionTransform implements TransformAction<Int
                         try (var entryStream = inputJar.getInputStream(entry)) {
                             if (entry.getName().endsWith(".class")) {
                                 ClassReader reader = new ClassReader(entryStream);
+
                                 String classType = entry.getName()
                                         .replace(".class", "");
-
                                 List<String> toInject = injections.get(classType);
                                 ClassWriter classWriter = new ClassWriter(Opcodes.ASM9);
-
                                 if (toInject != null) {
 
                                     List<InterfaceInjection> toApply = toInject.stream()
@@ -117,7 +120,6 @@ public abstract class InterfaceInjectionTransform implements TransformAction<Int
                                             .toList();
                                     reader.accept(new InjectVisitor(Opcodes.ASM9, classWriter, toApply), 0);
                                 } else reader.accept(classWriter, 0);
-
 
                                 byte[] byteArray = classWriter.toByteArray();
                                 JarEntry newEntry = new JarEntry(entry.getName());
