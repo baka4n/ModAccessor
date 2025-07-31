@@ -15,6 +15,5 @@ public class Stack {
         Textures textures = Internal.textures;
         TupleCodec.of(Codec.BOOL, Codec.INT).inject();
         TestB<Object, Object> objectObjectTestB = new TestB<>();
-
     }
 }
