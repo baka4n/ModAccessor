@@ -34,6 +34,8 @@ import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import static java.util.stream.StreamSupport.stream;
 
@@ -68,28 +70,32 @@ public abstract class InterfaceInjectionTransform implements TransformAction<Int
             List<Path> injectionFilePaths = stream(parameters.getInterfaceInjectionFiles().spliterator(), false)
                     .map(File::toPath)
                     .toList();
-            Map<String, List<String>> injections = new HashMap<>();
-            for (Path injectionFilePath : injectionFilePaths) {
-                try {
-                    JsonObject jsonObject = JsonParser.parseReader(Files.newBufferedReader(injectionFilePath)).getAsJsonObject();
-                    for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
-                        List<String> list = new ArrayList<>();
-                        if (entry.getValue().isJsonArray()) {
-                            JsonArray array = entry.getValue().getAsJsonArray();
-                            for (JsonElement element : array) {
-                                list.add(element.getAsString());
+            Map<String, List<String>> injections = injectionFilePaths.stream()
+                    .flatMap(path -> {
+                        try {
+                            JsonObject jsonObject = JsonParser.parseReader(Files.newBufferedReader(path)).getAsJsonObject();
+                            return jsonObject.entrySet().stream();
+                        } catch (IOException e) {
+                            throw new RuntimeException("Failed to parse injection file: " + path, e);
+                        }
+                    })
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey,
+                            entry -> {
+                                JsonElement value = entry.getValue();
+                                if (value.isJsonArray()) {
+                                    return stream(value.getAsJsonArray().spliterator(), false)
+                                            .map(JsonElement::getAsString)
+                                            .collect(Collectors.toList());
+                                } else if (value.isJsonPrimitive()) {
+                                    return Collections.singletonList(value.getAsString());
+                                }
+                                return Collections.emptyList();
+                            },
+                            (list1, list2) -> {
+                                return new ArrayList<String>(list2);
                             }
-                        }
-                        if (entry.getValue().isJsonPrimitive()) {
-                            list.add(entry.getValue().getAsString());
-                        }
-                        injections.put(entry.getKey(), list);
-                    }
-                } catch (IOException e) {
-                    throw new RuntimeException("Failed to parse injection file: " + injectionFilePath, e);
-                }
-
-            }
+                    ));
 
             File outputFile = outputs.file("injected-"+artifact.getName());
             if (injections.isEmpty()) {
@@ -104,12 +110,11 @@ public abstract class InterfaceInjectionTransform implements TransformAction<Int
                         try (var entryStream = inputJar.getInputStream(entry)) {
                             if (entry.getName().endsWith(".class")) {
                                 ClassReader reader = new ClassReader(entryStream);
+                                
                                 String classType = entry.getName()
                                         .replace(".class", "");
-
                                 List<String> toInject = injections.get(classType);
                                 ClassWriter classWriter = new ClassWriter(Opcodes.ASM9);
-
                                 if (toInject != null) {
 
                                     List<InterfaceInjection> toApply = toInject.stream()
@@ -117,7 +122,6 @@ public abstract class InterfaceInjectionTransform implements TransformAction<Int
                                             .toList();
                                     reader.accept(new InjectVisitor(Opcodes.ASM9, classWriter, toApply), 0);
                                 } else reader.accept(classWriter, 0);
-
 
                                 byte[] byteArray = classWriter.toByteArray();
                                 JarEntry newEntry = new JarEntry(entry.getName());
@@ -151,6 +155,7 @@ public abstract class InterfaceInjectionTransform implements TransformAction<Int
     //Code From:https://github.com/FabricMC/fabric-loom/blob/7c53939918cf63cdf4f176847088fd747c61e993/src/main/java/net/fabricmc/loom/configuration/ifaceinject/InterfaceInjectionProcessor.java
     private record InterfaceInjection(String target, String toImpl, @Nullable String generics) {
         public static InterfaceInjection of(String target, String toImpl) {
+
             String type = toImpl;
             String generics = null;
 
@@ -195,10 +200,16 @@ public abstract class InterfaceInjectionTransform implements TransformAction<Int
         }
 
         private static String processNestedGenerics(String component) {
-
             int start = component.indexOf('<');
+            if (start == -1) {
+                return "L" + component + ";";
+            }
             int end = component.lastIndexOf('>');
+            if (end == -1 || end <= start) {
+                return "L" + component + ";";
+            }
             String outerType = component.substring(0, start);
+            System.out.println(outerType);
             String innerRawGenerics = component.substring(start + 1, end).replace('.', '/');
             // Split the inner generics into individual components
             String[] innerGenericComponents = innerRawGenerics.split(",\\s*(?![^<>]*>)");
