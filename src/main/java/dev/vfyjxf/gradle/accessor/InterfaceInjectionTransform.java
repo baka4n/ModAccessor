@@ -1,5 +1,6 @@
 package dev.vfyjxf.gradle.accessor;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -26,7 +27,9 @@ import org.objectweb.asm.util.CheckSignatureAdapter;
 import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -158,64 +161,80 @@ public abstract class InterfaceInjectionTransform implements TransformAction<Int
             if (toImpl.contains("<") && toImpl.contains(">")) {
                 int start = toImpl.indexOf('<');
                 int end = toImpl.lastIndexOf('>');
-                if(start >= end) {
-                    throw new IllegalArgumentException("Invalid target class name: " + toImpl);
-                }
                 type = toImpl.substring(0, start);
 
-                String rawGenerics = toImpl.substring(start + 1, end);
-                String processedGenerics = processGenerics(rawGenerics);
+                // Extract the generics part and replace '.' with '/'
+                String rawGenerics = toImpl.substring(start + 1, end).replace('.', '/');
                 // Split the generics into individual components
+                String[] genericComponents = rawGenerics.split(",\\s*(?![^<>]*>)");
+                StringBuilder processedGenerics = new StringBuilder("<");
+                for (int i = 0; i < genericComponents.length; i++) {
+                    String component = genericComponents[i].trim();
+                    // Handle nested generics
+                    if (component.contains("<")) {
+                        // Recursively process nested generics
+                        component = processNestedGenerics(component);
+                    } else {
+                        // Handle simple types
+                        component = "L" + component + ";";
+                    }
 
+                    processedGenerics.append(component);
 
-                generics = "<" + processedGenerics + ">";
+//                    if (i < genericComponents.length - 1) {
+//                        //processedGenerics.append(",");
+//                    }
+                }
 
-                validateGenericSignature(generics);
-
+                processedGenerics.append(">");
+                generics = processedGenerics.toString();
+                // First Generics Check, if there are generics, are they correctly written?
+                SignatureReader reader = new SignatureReader("Ljava/lang/Object" + generics + ";");
+                // Assuming CheckSignatureAdapter is a class that can handle the signature and reader is defined somewhere above
+                CheckSignatureAdapter checker = new CheckSignatureAdapter(CheckSignatureAdapter.CLASS_SIGNATURE, null);
+                reader.accept(checker);
             }
             return new InterfaceInjection(target, type, generics);
         }
 
-        private static void validateGenericSignature(String generics) {
-            try {
-                SignatureReader reader = new SignatureReader("Ljava/lang/Object" + generics + ";");
-                CheckSignatureAdapter checker = new CheckSignatureAdapter(CheckSignatureAdapter.CLASS_SIGNATURE, null);
-                reader.accept(checker);
-            } catch (Exception e) {
-                throw new IllegalArgumentException("Invalid generic signature: " + generics, e);
+        private static String processNestedGenerics(String component) {
+            int start = component.indexOf('<');
+            if (start == -1) {
+                return "L" + component + ";";
             }
-        }
+            int end = component.lastIndexOf('>');
+            if (end == -1 || end <= start) {
+                return "L" + component + ";";
+            }
+            String outerType = component.substring(0, start);
+            System.out.println(outerType);
+            String innerRawGenerics = component.substring(start + 1, end).replace('.', '/');
+            // Split the inner generics into individual components
+            String[] innerGenericComponents = innerRawGenerics.split(",\\s*(?![^<>]*>)");
+            StringBuilder innerProcessedGenerics = new StringBuilder("<");
 
-        private static String processGenerics(String genericStr) {
-            StringBuilder result = new StringBuilder();
-            int depth = 0; // 嵌套深度计数器
-            int start = 0;
+            for (int i = 0; i < innerGenericComponents.length; i++) {
+                String innerComponent = innerGenericComponents[i].trim();
 
-            for (int i = 0; i < genericStr.length(); i++) {
-                char c = genericStr.charAt(i);
-                if (c == '<') depth++;
-                else if (c == '>') depth--;
-                else if (c == ',' && depth == 0) { // 仅在顶层逗号处分割
-                    result.append(processSingleComponent(genericStr.substring(start, i).trim())).append(";");
-                    start = i + 1;
+                // Handle nested generics recursively
+                if (innerComponent.contains("<")) {
+                    innerComponent = processNestedGenerics(innerComponent);
+                } else {
+                    // Handle simple types
+                    innerComponent = "L" + innerComponent + ";";
                 }
+
+                innerProcessedGenerics.append(innerComponent);
+
+//                if (i < innerGenericComponents.length - 1) {
+//                    innerProcessedGenerics.append(",");
+//                }
             }
-            // 处理最后一个组件
-            result.append(processSingleComponent(genericStr.substring(start).trim())).append(";");
-            return result.toString().replace(";;", ";"); // 清理多余分号
+
+            innerProcessedGenerics.append(">");
+            return "L" + outerType + innerProcessedGenerics.toString() + ";";
         }
 
-        private static String processSingleComponent(String component) {
-            if (component.isEmpty()) return "";
-            int nestedStart = component.indexOf('<');
-            if (nestedStart == -1) {
-                return "L" + component; // 非嵌套类型：如 "String" → "Ljava/lang/String"
-            }
-            // 嵌套类型：如 "Map<K,V>" → "Ljava/util/Map<LK;LV;>"
-            String outerType = component.substring(0, nestedStart);
-            String nestedGenerics = component.substring(nestedStart + 1, component.lastIndexOf('>'));
-            return "L" + outerType + "<" + processGenerics(nestedGenerics) + ">";
-        }
 
     }
 
