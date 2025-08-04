@@ -198,41 +198,43 @@ public abstract class InterfaceInjectionTransform implements TransformAction<Int
         }
 
         private static String processNestedGenerics(String component) {
+            // 如果是单个大写字母（如 E, T, K, V 等泛型类型参数）
+            if (component.length() == 1 && Character.isUpperCase(component.charAt(0))) {
+                return "T" + component + ";"; // 转换为 TE; 形式
+            }
+
             int start = component.indexOf('<');
             if (start == -1) {
-                return "L" + component + ";";
+                // 不是泛型，如果是单个大写字母则返回 TE;，否则返回 L...;
+                return (component.length() == 1 && Character.isUpperCase(component.charAt(0)))
+                        ? "T" + component + ";"
+                        : "L" + component + ";";
             }
+
             int end = component.lastIndexOf('>');
             if (end == -1 || end <= start) {
                 return "L" + component + ";";
             }
+
             String outerType = component.substring(0, start);
-            System.out.println(outerType);
             String innerRawGenerics = component.substring(start + 1, end).replace('.', '/');
-            // Split the inner generics into individual components
             String[] innerGenericComponents = innerRawGenerics.split(",\\s*(?![^<>]*>)");
             StringBuilder innerProcessedGenerics = new StringBuilder("<");
 
-            for (int i = 0; i < innerGenericComponents.length; i++) {
-                String innerComponent = innerGenericComponents[i].trim();
+            for (String innerComponent : innerGenericComponents) {
+                innerComponent = innerComponent.trim();
 
-                // Handle nested generics recursively
-                if (innerComponent.contains("<")) {
-                    innerComponent = processNestedGenerics(innerComponent);
+                if (innerComponent.length() == 1 && Character.isUpperCase(innerComponent.charAt(0))) {
+                    innerProcessedGenerics.append("T").append(innerComponent).append(";");
+                } else if (innerComponent.contains("<")) {
+                    innerProcessedGenerics.append(processNestedGenerics(innerComponent));
                 } else {
-                    // Handle simple types
-                    innerComponent = "L" + innerComponent + ";";
+                    innerProcessedGenerics.append("L").append(innerComponent).append(";");
                 }
-
-                innerProcessedGenerics.append(innerComponent);
-
-//                if (i < innerGenericComponents.length - 1) {
-//                    innerProcessedGenerics.append(",");
-//                }
             }
 
             innerProcessedGenerics.append(">");
-            return "L" + outerType + innerProcessedGenerics.toString() + ";";
+            return "L" + outerType + innerProcessedGenerics + ";";
         }
 
 
