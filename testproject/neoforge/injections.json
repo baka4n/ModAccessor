@@ -1,7 +1,7 @@
 {
   "mezz/jei/common/JeiFeatures": [
     "test/injection/InterfaceInjected",
-    "java/util/function/Supplier<test.injection.Stack>"
+    "java/util/function/Supplier<test/injection/Stack>"
   ],
   "mezz/jei/common/codecs/TupleCodec": [
     "test/injection/InterfaceInjected2<F, S>"
