@@ -1,8 +1,6 @@
 package test.injection;
 
 import mezz.jei.api.gui.placement.IPlaceable;
-import test.injection.api.TestA;
-import test.injection.api.TestB;
 
 /**
  * @author baka4n

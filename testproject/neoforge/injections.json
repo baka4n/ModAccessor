@@ -1,12 +1,13 @@
 {
   "mezz/jei/common/JeiFeatures": [
     "test/injection/InterfaceInjected",
-    "java/util/function/Supplier<test/injection/Stack>"
+    "java/util/function/Supplier<mezz/jei/common/gui/elements/OffsetDrawable>"
+
   ],
-  "mezz/jei/common/codecs/TupleCodec": [
-    "test/injection/InterfaceInjected2<F, S>"
+  "mezz/jei/common/gui/elements/OffsetDrawable": [
+    "test/injection/InterfaceInjectedWithSelf<mezz/jei/common/gui/elements/OffsetDrawable, mezz/jei/common/gui/elements/OffsetDrawable>"
   ],
-  "test/injection/api/TestB": [
-    "test/injection/InterfaceInjectedWithSelf<E, F, test/injection/api/TestB<E, F>>"
+  "mezz/jei/api/gui/placement/IPlaceable": [
+    "test/injection/InterfaceInjectedSelf<THIS>"
   ]
 }

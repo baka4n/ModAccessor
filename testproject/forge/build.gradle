@@ -114,6 +114,7 @@ modAccessor {
 
 dependencies {
     accessModCompileOnly("mezz.jei:jei-1.20.1-forge:15.20.0.112")
+    accessModCompileOnly("test.api:testapi:unspecified")
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.

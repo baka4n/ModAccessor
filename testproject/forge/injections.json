@@ -1,6 +1,13 @@
 {
   "mezz/jei/common/JeiFeatures": [
     "test/injection/InterfaceInjected",
-    "java/util/function/Supplier<test.injection.Stack>"
+    "java/util/function/Supplier<mezz/jei/common/gui/elements/OffsetDrawable>"
+
+  ],
+  "mezz/jei/common/gui/elements/OffsetDrawable": [
+    "test/injection/InterfaceInjectedWithSelf<mezz/jei/common/gui/elements/OffsetDrawable, mezz/jei/common/gui/elements/OffsetDrawable>"
+  ],
+  "mezz/jei/api/gui/placement/IPlaceable": [
+    "test/injection/InterfaceInjectedSelf<THIS>"
   ]
 }
